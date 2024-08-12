@@ -61,6 +61,7 @@ let
   for (j,sj) in enumerate(sites)
     psi0[j] = random_itensor(sj)
   end
+  psi0 = normalize(psi0)
 
   nsweeps = 4
   cutoff = 1E-8
