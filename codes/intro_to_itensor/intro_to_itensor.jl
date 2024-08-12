@@ -117,8 +117,9 @@ function computeHOSVD(::SmarterTucker, A::ITensor)
         ## square the problem by priming the leg you want to decompose
         square = TD.Core_Factors[1] * prime(TD.Core_Factors[1], i)
         #### The left singular vectors are now the eigenvectors of the problem 
-        U,_ = eigen(square)
+        _,U = eigen(square, i, i')
         
+        U = noprime(real(U))
         push!(TD.Core_Factors, U)
         ## Contract the factor with the partially transformed 
         ## Core tensor
@@ -127,8 +128,16 @@ function computeHOSVD(::SmarterTucker, A::ITensor)
     return TD
 end
 
+i, j = Index.((2,2))
+A = random_itensor(i,j)
+
 TD = TuckerDecomp(A; algorithm=SmarterTucker())
-TD.Core_Factors[1].tensor
+TD.Core_Factors[3].tensor
+
+A ≈ contract(TD.Core_Factors)
+algorithm = SmarterTucker()
+TD = TuckerDecomp(D; algorithm)
+D ≈ contract(TD.Core_Factors)
 
 ## Can you make an algorithm that truncates the tucker factors based off of the spectrum?
 
