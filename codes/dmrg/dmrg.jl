@@ -53,6 +53,7 @@ function custom_dmrg(H, psi; nsweeps, maxiter=2, krylovdim=6, kws...)
       #
       # 2. TODO: call the ITensor `svd` routine to factorize
       # the improved ϕ tensor. Decide how to correctly split
+
       # the outputs u, s, and v into the new MPS tensors.
       #
       # Hint: the `commoninds` and `uniqueinds` functions are
