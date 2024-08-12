@@ -10,7 +10,7 @@ function mult(Hcache,ϕ)
   RH = right_H(Hcache)
   RE = right_environment(Hcache)
 
-  # 1. TODO using the tensors above
+  # Task 1. TODO using the tensors above
   # and the two-site wavefunction ϕ,
   # implement the product of the 'effective'
   # Hamiltonian times ϕ
@@ -51,7 +51,7 @@ function custom_dmrg(H, psi; nsweeps, maxiter=2, krylovdim=6, kws...)
       @show energy
 
       #
-      # 2. TODO: call the ITensor `svd` routine to factorize
+      # Task 2. TODO: call the ITensor `svd` routine to factorize
       # the improved ϕ tensor. Decide how to correctly split
 
       # the outputs u, s, and v into the new MPS tensors.
@@ -99,7 +99,7 @@ let
 
   @show final_energy
 
-  # 3. TODO 
+  # Task 3. TODO 
   # A correct code should output the energy -138.94008
   # for an N=100 S=1 Heisenberg chain
 
