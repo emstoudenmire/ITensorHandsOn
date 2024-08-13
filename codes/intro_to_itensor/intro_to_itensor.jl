@@ -21,10 +21,6 @@ transpose(a * b) * transpose(d)
 b = Array(randn(elt, (20,30,40)))
 
 
-
-
-
-
 using ITensors
 elt = Float64
 ## ITensor uses a intelligent index system which contains meta information
