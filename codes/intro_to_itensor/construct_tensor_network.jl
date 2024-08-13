@@ -26,4 +26,3 @@ F = ITensor(elt, is[6], is[10], is[11])
 
 network(A,B,C,D,E,F) = contract([A,B,C,D,E,F])
 @test inds(network(A,B,C,D,E,F)) == (is[7], is[8], is[9], is[10],is[11])
-
