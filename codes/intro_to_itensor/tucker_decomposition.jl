@@ -112,6 +112,11 @@ function HOOI(TD::TuckerDecomp, target::ITensor; niters = 1)
   end
 end
 
+elt = Float64
+a = rand(elt, 10,20);
+i,j = Index.((10,20));
+A = itensor(a, i,j);
+
 TD = TuckerDecomp(A)
 
 ## The tucker decomposition for a matrix is the SVD so check the validity 
@@ -126,7 +131,6 @@ D ≈ contract(TD.Core_Factors)
 
 algorithm = SmarterTucker()
 TD = TuckerDecomp(A; algorithm)
-TD.Core_Factors[3].tensor
 
 A ≈ contract(TD.Core_Factors)
 TD = @time TuckerDecomp(D; algorithm);
@@ -134,7 +138,16 @@ D ≈ contract(TD.Core_Factors)
 
 algorithm = TruncatedTucker(0.1)
 @time TD = TuckerDecomp(D; algorithm);
-TD.Core_Factors[1]
 1.0 - norm(D - contract(TD.Core_Factors))/ norm(D)
 
 HOOI(TD, D; niters = 15)
+
+## This smaller example improves much more from HOOI.
+d = randn(Float64, 20,30,40)
+j,k,l = Index.((20,30,40))
+D = itensor(d, j,k,l)
+algorithm = TruncatedTucker(0.2)
+TD = TuckerDecomp(D; algorithm);
+TD.Core_Factors[1]
+1.0 - norm(D - contract(TD.Core_Factors)) / norm(D)
+HOOI(TD, D; niters = 1000)
