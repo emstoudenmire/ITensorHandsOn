@@ -81,8 +81,7 @@ function computeHOSVD(::NaiveTucker, A::ITensor)
 
     for i in inds(A)
         #### For each leg one must compute the SVD 
-        U, S, _ = svd(TD.Core_Factors[1], (i,))
-        @show diag(S)
+        U, _, _ = svd(TD.Core_Factors[1], (i,))
         push!(TD.Core_Factors, U)
         ## Contract the factor with the partially transformed 
         ## Core tensor
@@ -96,8 +95,9 @@ TD = TuckerDecomp(A)
 ## The tucker decomposition for a matrix is the SVD so check the validity 
 A ≈ TD.Core_Factors[2] * TD.Core_Factors[1] * TD.Core_Factors[3]
 
-D = itensor(rand(10,20,30), (i,j,k))
-TDD = TuckerDecomp(D)
+i,j,k = Index.((100,200,300))
+D = itensor(randn(100,200,300), i,j,k)
+@time TDD = TuckerDecomp(D);
 
 ## You can also simply contract a collection of vectors using the contract function.
 D ≈ contract(TDD.Core_Factors)
@@ -128,17 +128,67 @@ function computeHOSVD(::SmarterTucker, A::ITensor)
     return TD
 end
 
-i, j = Index.((2,2))
-A = random_itensor(i,j)
-
-TD = TuckerDecomp(A; algorithm=SmarterTucker())
+algorithm = SmarterTucker()
+TD = TuckerDecomp(A; algorithm)
 TD.Core_Factors[3].tensor
 
 A ≈ contract(TD.Core_Factors)
-algorithm = SmarterTucker()
-TD = TuckerDecomp(D; algorithm)
+TD = @time TuckerDecomp(D; algorithm);
 D ≈ contract(TD.Core_Factors)
 
 ## Can you make an algorithm that truncates the tucker factors based off of the spectrum?
+struct TruncatedTucker <:TuckerAlgorithm
+    cutoff::Number
+end
+
+function computeHOSVD(T::TruncatedTucker, A::ITensor)
+    TD = TuckerDecomp([copy(A),])
+
+    for i in inds(A)
+        ## square the problem by priming the leg you want to decompose
+        square = TD.Core_Factors[1] * prime(TD.Core_Factors[1], i)
+        #### The left singular vectors are now the eigenvectors of the problem 
+        _,U = eigen(square, i, i'; T.cutoff)
+        
+        U = noprime(real(U))
+        push!(TD.Core_Factors, U)
+        ## Contract the factor with the partially transformed 
+        ## Core tensor
+        TD.Core_Factors[1] = U * TD.Core_Factors[1]
+    end
+    return TD
+end
+
+algorithm = TruncatedTucker(0.1)
+@time TD = TuckerDecomp(D; algorithm);
+TD.Core_Factors[1]
+1.0 - norm(D - contract(TD.Core_Factors))/ norm(D)
+
+function HOOI(TD::TuckerDecomp, target::ITensor; niters = 1)
+    accuracy = 1.0 - norm(contract(TD.Core_Factors) - target) / norm(target)
+    for iters in 1:niters
+        S = ITensor()
+        V = ITensor()
+        for i in 1:length(size(target))
+            list = Vector{ITensor}([target,])
+            append!(list, deleteat!(copy(TD.Core_Factors), [1, (i+1)]))
+            B = contract(list)
+            U,S,V = svd(B, ind(TD.Core_Factors[i+1],1); maxdim = dim(TD.Core_Factors[i+1],2))
+            TD.Core_Factors[i+1] = U
+            TD.Core_Factors[1] = S * V
+        end
+        TD.Core_Factors[1] = S * V
+        curr_accuracy = 1.0 - norm(contract(TD.Core_Factors) - target) / norm(target)
+        println("$iters \t $curr_accuracy")
+        if abs(accuracy - curr_accuracy) < 1e-10
+            return
+        end
+        accuracy = curr_accuracy
+    end
+end
+HOOI(TD, D; niters = 15)
 
 ## Can you use a randomized SVD algorithm instead of squaring the problem?
+struct RandomizedTucker <:TuckerAlgorithm
+    
+end
