@@ -7,6 +7,8 @@ BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 ITensorMPS = "0d1a4710-d33b-49a5-8f18-73bdf49b47e2"
 ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 LinearMaps = "7a12625a-238d-50fd-b39a-03d52299707e"
+QuanticsTCI = "b11687fd-3a1c-4c41-97d0-998ab401d50e"
+TCIITensorConversion = "9f0aa9f4-9415-4e6a-8795-331ebf40aa04"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
