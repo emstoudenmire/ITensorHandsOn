@@ -3,10 +3,11 @@ authors = ["Miles Stoudenmire <mstoudenmire@flatironinstitute.org>", "Karl Pierc
 version = "0.0.1"
 
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 ITensorMPS = "0d1a4710-d33b-49a5-8f18-73bdf49b47e2"
 ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
-KrylovKit = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
 LinearMaps = "7a12625a-238d-50fd-b39a-03d52299707e"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 LinearMaps = "<3.11.2"
