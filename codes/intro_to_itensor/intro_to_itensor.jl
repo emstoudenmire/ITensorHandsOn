@@ -42,7 +42,8 @@ C = ITensor(elt, i')
 B + C
 
 B * C
-
+j = Index(5,"j")
+A = random_itensor(i,j)
 A[1,2]
 A[i=>1, j=>2]
 
