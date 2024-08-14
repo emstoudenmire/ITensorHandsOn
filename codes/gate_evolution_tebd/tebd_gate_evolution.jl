@@ -6,13 +6,22 @@ include("util.jl")
 include("make_gates.jl")
 
 function apply_gate(g, psi; cutoff, maxdim)
-  j = findsite(psi,inds(g))
-  psi = orthogonalize(psi,j)
-  gpsi = noprime(g*psi[j]*psi[j+1])
-  u,s,v = svd(gpsi,uniqueinds(psi[j],psi[j+1]); cutoff,maxdim)
-  psi[j] = u
-  psi[j+1] = s*v
-  psi[j+1] /= norm(psi[j+1])
+  j = findsite(psi,inds(g))  # the gate acts on sites j and j+1
+  psi = orthogonalize(psi,j) # this is a technical step to 
+                             # ensure truncation accuracy
+
+  # Task TODO:
+  # Implement the "TEBD" gate application method here, 
+  # using ITensor contraction A*B, the "noprime" function,
+  # and the ITensor svd function.
+  # Tips:
+  # - You can obtain the j and j+1 MPS tensors like psi[j] and psi[j+1].
+  # - The uniqueinds and commoninds functions can be helpful to obtain collections of
+  #   indices to pass to the svd function.
+  # - Pass cutoff and maxdim to the svd to control the resulting "bond dimension"
+  # - Don't forget to normalize the wavefunction! You can use norm(T) to 
+  #   get the norm (sqrt of sum of squared elements) of an ITensor.
+
   return psi
 end
 
