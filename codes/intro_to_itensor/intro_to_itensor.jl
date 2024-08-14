@@ -20,7 +20,7 @@ transpose(a * b) * transpose(d)
 
 b = Array(randn(elt, (30,20,40)))
 
-a * b ## fails because b is a no longer a matrix.
+#a * b ## fails because b is a no longer a matrix.
 
 using ITensors
 elt = Float64
@@ -39,7 +39,7 @@ B = ITensor(elt, i)
 C = ITensor(elt, i')
 ## Though B and C are both the same dimension and tag
 ## they have a different number of prime levels so you cannot add them.
-B + C
+#B + C
 
 B * C
 j = Index(5,"j")
@@ -50,7 +50,7 @@ A[i=>1, j=>2]
 A
 transpose(A)
 
-C = ITensor(rand(ComplexF64, 10,20), i,j)
+C = ITensor(rand(ComplexF64, 5,5), i,j)
 C[1,1]
 dag(C)[1,1]
 
