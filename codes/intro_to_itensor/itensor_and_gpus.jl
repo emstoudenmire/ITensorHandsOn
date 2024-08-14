@@ -16,6 +16,7 @@ using BenchmarkTools
 ## associated GPU library will load
 #using CUDA
 using Metal
+include("mtl_helper.jl")
 #using AMDGPU
 
 dev = mtl # mtl cu rocm NDTensors.cpu
