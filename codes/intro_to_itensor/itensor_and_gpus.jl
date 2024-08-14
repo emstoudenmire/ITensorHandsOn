@@ -18,8 +18,6 @@ using BenchmarkTools
 using Metal
 #using AMDGPU
 
-using BenchmarkTools
-
 dev = mtl # mtl cu rocm NDTensors.cpu
 elt = (dev == mtl ? Float32 : Float64)
 ## construct some matrices
@@ -64,13 +62,14 @@ mA, mB = dev.((A,B))
 
 ## construct some matrices
 N = 5000
-a = randn(elt, N, N);
-b = randn(elt, N, N);
-c = zeros(elt, (N,N));
+i,j,k = Index.((N,N,N))
+a = itensor(randn(elt, N, N), i,j);
+b = itensor(randn(elt, N, N), j,k);
+c = itensor(zeros(elt, (N,N)), i,k);
 @benchmark mul!(c, a, b)
 
 ## convert arrays to GPU device
 ca, cb = dev.((a,b));
 cc = dev(similar(c));
 fill!(cc, zero(elt));
-@benchmark mul!(cc, ca, cb);
+@benchmark mul!(cc, ca, cb)

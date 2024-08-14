@@ -3,6 +3,7 @@ authors = ["Miles Stoudenmire <mstoudenmire@flatironinstitute.org>", "Karl Pierc
 version = "0.0.1"
 
 [deps]
+Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 ITensorMPS = "0d1a4710-d33b-49a5-8f18-73bdf49b47e2"
