@@ -27,4 +27,10 @@ F = ITensor(elt, is[6], is[10], is[11])
 network(A,B,C,D,E,F) = contract([A,B,C,D,E,F])
 @test inds(network(A,B,C,D,E,F)) == (is[7], is[8], is[9], is[10],is[11])
 
+
+### Can you construct an 8 index Matrix product state with site indices with dimension 4
+## and bond dimensions which are a gaussian distribution?
+##  |    |    |    |    |    |    |    |
+##  A -- B -- C -- D -- E -- F -- G -- H
+
 ## This process will be simplified with the ITensorNetworks.jl library which is under construction.
