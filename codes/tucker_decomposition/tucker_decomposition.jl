@@ -3,7 +3,8 @@ using LinearAlgebra
 ### Struct for the Tucker decomposition
 
 struct TuckerDecomp
-  Core_Factors::Vector{ITensor}
+  Core::ITensor
+  Factors::Vector{ITensor}
 end
 
 abstract type TuckerAlgorithm end
@@ -19,67 +20,62 @@ struct SmarterTucker <:TuckerAlgorithm
 end
 
 ## Can you make an algorithm that truncates the tucker factors based off of the spectrum?
-struct TruncatedTucker <:TuckerAlgorithm
+struct TruncatedTucker 
   cutoff::Number
+  solver::Union{TuckerAlgorithm, Nothing}
 end
+TruncatedTucker(cutoff::Number) = TruncatedTucker(cutoff, nothing)
+TruncatedTucker(cutoff::Number, solver::Type{<:TuckerAlgorithm}) = TruncatedTucker(cutoff, solver())
 
 ## Can you use a randomized SVD algorithm instead of squaring the problem?
 struct RandomizedTucker <:TuckerAlgorithm
   
 end
 
-TuckerDecomp(A::ITensor; algorithm::TuckerAlgorithm=NaiveTucker()) = computeHOSVD(algorithm, A)
-TuckerDecomp(A::AbstractArray; algorithm::TuckerAlgorithm=NaiveTucker()) = TuckerDecomp(itensor(A, Index.(size(A))); algorithm)
+TuckerDecomp(A::ITensor; algorithm=NaiveTucker()) = computeHOSVD(algorithm, A)
+TuckerDecomp(A::AbstractArray; algorithm=NaiveTucker()) = TuckerDecomp(itensor(A, Index.(size(A))); algorithm)
 
-## Naive tucker decomposition algorithm
-function computeHOSVD(::NaiveTucker, A::ITensor)
-  TD = TuckerDecomp([copy(A),])
-
-  for i in inds(A)
-      #### For each leg one must compute the SVD 
-      U, _, _ = svd(TD.Core_Factors[1], (i,))
-      push!(TD.Core_Factors, U)
-      ## Contract the factor with the partially transformed 
-      ## Core tensor
-      TD.Core_Factors[1] = U * TD.Core_Factors[1]
-  end
-  return TD
+function ITensors.contract(A::TuckerDecomp)
+  contract([A.Core, A.Factors...])
 end
 
-function computeHOSVD(::SmarterTucker, A::ITensor)
-  TD = TuckerDecomp([copy(A),])
+## Naive tucker decomposition algorithm
+function computeHOSVD(::NaiveTucker, A::ITensor; cutoff=nothing)
+  Core = copy(A)
+  Factors = Vector{ITensor}([])
+  for i in inds(A)
+      #### For each leg one must compute the SVD 
+      U, _, _ = svd(Core, (i,); cutoff=cutoff)
+      push!(Factors, U)
+      ## Contract the factor with the partially transformed 
+      ## Core tensor
+      Core = U * Core
+  end
+  return TuckerDecomp(Core, Factors)
+end
+
+function computeHOSVD(::SmarterTucker, A::ITensor; cutoff=nothing)
+  Core = copy(A)
+  Factors = Vector{ITensor}([])
 
   for i in inds(A)
       ## square the problem by priming the leg you want to decompose
-      square = TD.Core_Factors[1] * prime(TD.Core_Factors[1], i)
+      square = Core * prime(Core, i)
       #### The left singular vectors are now the eigenvectors of the problem 
-      _,U = eigen(square, i, i')
+      _,U = eigen(square, i, i'; cutoff)
       
       U = noprime(real(U))
-      push!(TD.Core_Factors, U)
+      push!(Factors, U)
       ## Contract the factor with the partially transformed 
       ## Core tensor
-      TD.Core_Factors[1] = U * TD.Core_Factors[1]
+      Core = U * Core
   end
-  return TD
+  return TuckerDecomp(Core, Factors)
 end
 
 function computeHOSVD(T::TruncatedTucker, A::ITensor)
-  TD = TuckerDecomp([copy(A),])
-
-  for i in inds(A)
-      ## square the problem by priming the leg you want to decompose
-      square = TD.Core_Factors[1] * prime(TD.Core_Factors[1], i)
-      #### The left singular vectors are now the eigenvectors of the problem 
-      _,U = eigen(square, i, i'; T.cutoff)
-      
-      U = noprime(real(U))
-      push!(TD.Core_Factors, U)
-      ## Contract the factor with the partially transformed 
-      ## Core tensor
-      TD.Core_Factors[1] = U * TD.Core_Factors[1]
-  end
-  return TD
+  solver = isnothing(T.solver) ? NaiveTucker() : T.solver
+  computeHOSVD(solver, A; T.cutoff)
 end
 
 ## You can easily use an alternating least squares algorithm to 
@@ -90,26 +86,28 @@ end
 ## And C is the new optimized core tensor. C can also be expressed as Σ V^{k} derived from the SVD
 ## of the LHS of the equation.
 function HOOI(TD::TuckerDecomp, target::ITensor; niters = 1)
-  accuracy = 1.0 - norm(contract(TD.Core_Factors) - target) / norm(target)
+  accuracy = 1.0 - norm(contract(TD) - target) / norm(target)
+  Factors = copy(TD.Factors)
+  Core = copy(TD.Core)
   for iters in 1:niters
       S = ITensor()
       V = ITensor()
       for i in 1:length(size(target))
           list = Vector{ITensor}([target,])
-          append!(list, deleteat!(copy(TD.Core_Factors), [1, (i+1)]))
+          append!(list, deleteat!(copy(Factors), [(i)]))
           B = contract(list)
-          U,S,V = svd(B, ind(TD.Core_Factors[i+1],1); maxdim = dim(TD.Core_Factors[i+1],2))
-          TD.Core_Factors[i+1] = U
-          TD.Core_Factors[1] = S * V
+          U,S,V = svd(B, ind(Factors[i],1); maxdim = dim(Factors[i],2))
+          Factors[i] = U
       end
-      TD.Core_Factors[1] = S * V
-      curr_accuracy = 1.0 - norm(contract(TD.Core_Factors) - target) / norm(target)
+      Core = S * V
+      curr_accuracy = 1.0 - norm(contract([Core, Factors...]) - target) / norm(target)
       println("$iters \t $curr_accuracy")
       if abs(accuracy - curr_accuracy) < 1e-10
-          return
+          return TuckerDecomp(Core, Factors)
       end
       accuracy = curr_accuracy
   end
+  return TuckerDecomp(Core, Factors)
 end
 
 elt = Float64
@@ -117,37 +115,36 @@ a = rand(elt, 10,20);
 i,j = Index.((10,20));
 A = itensor(a, i,j);
 
-TD = TuckerDecomp(A)
+TD = TuckerDecomp(A);
 
 ## The tucker decomposition for a matrix is the SVD so check the validity 
-A ≈ TD.Core_Factors[2] * TD.Core_Factors[1] * TD.Core_Factors[3]
+A ≈ TD.Factors[1] * TD.Core * TD.Factors[2]
 
 i,j,k = Index.((100,200,300))
 D = itensor(randn(100,200,300), i,j,k)
 @time TD = TuckerDecomp(D);
 
 ## You can also simply contract a collection of vectors using the contract function.
-D ≈ contract(TD.Core_Factors)
+D ≈ contract(TD)
 
 algorithm = SmarterTucker()
 TD = TuckerDecomp(A; algorithm)
 
-A ≈ contract(TD.Core_Factors)
+A ≈ contract(TD)
 TD = @time TuckerDecomp(D; algorithm);
-D ≈ contract(TD.Core_Factors)
+D ≈ contract(TD)
 
-algorithm = TruncatedTucker(0.1)
+algorithm = TruncatedTucker(0.1, SmarterTucker)
 @time TD = TuckerDecomp(D; algorithm);
-1.0 - norm(D - contract(TD.Core_Factors))/ norm(D)
+1.0 - norm(D - contract(TD))/ norm(D)
 
-HOOI(TD, D; niters = 15)
+@time TD =  HOOI(TD, D; niters = 15);
 
 ## This smaller example improves much more from HOOI.
 d = randn(Float64, 20,30,40)
 j,k,l = Index.((20,30,40))
 D = itensor(d, j,k,l)
-algorithm = TruncatedTucker(0.2)
+algorithm = TruncatedTucker(0.2, SmarterTucker)
 TD = TuckerDecomp(D; algorithm);
-TD.Core_Factors[1]
-1.0 - norm(D - contract(TD.Core_Factors)) / norm(D)
-HOOI(TD, D; niters = 1000)
+1.0 - norm(D - contract(TD)) / norm(D)
+TD = HOOI(TD, D; niters = 1000);
