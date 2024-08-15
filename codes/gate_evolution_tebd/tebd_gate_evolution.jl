@@ -32,7 +32,7 @@ function tebd_gate_evolution(gates, psi; cutoff=default_cutoff(), maxdim=default
   return psi
 end
 
-function main(; n=40, cutoff=default_cutoff(), maxdim=default_maxdim(), seed=1)
+function main(; n=40, cutoff=default_cutoff(), maxdim=default_maxdim(), seed=1, sites=nothing)
   Random.seed!(seed)
 
   if isnothing(sites)
