@@ -1,4 +1,6 @@
-include("tebd_gate_evolution.jl")
+include("../tebd_gate_evolution.jl")
+include("../utilities/initial_state.jl")
+include("../utilities/make_random_gates.jl")
 
 """
   full_state_evolution(gates, psi)
@@ -28,7 +30,7 @@ function check_fidelity(n; seed=1)
   Random.seed!(seed)
 
   sites = qubit_sites(n)
-  gates = make_gates(sites)
+  gates = make_random_gates(sites)
 
   psi0 = initial_state(sites)
 
@@ -38,5 +40,4 @@ function check_fidelity(n; seed=1)
   overlap = scalar(psi_full*prod(psi_mps))
 
   println("overlap = ",overlap)
-  return overlap
 end
