@@ -1,8 +1,9 @@
 using ITensors
 using Random
 
-include("util.jl")
-include("make_gates.jl")
+include("utilities/utilities.jl")
+include("utilities/initial_state.jl")
+include("utilities/make_random_gates.jl")
 
 function full_state_evolution(gates, psi)
   for g in gates
@@ -22,7 +23,7 @@ function main(; n=10, seed=1)
 
   psi = prod(initial_state(sites))
 
-  gates = make_gates(sites)
+  gates = make_random_gates(sites)
 
   psi = full_state_evolution(gates,psi)
 

@@ -2,8 +2,9 @@ using ITensors
 using ITensorMPS
 using Random
 
-include("util.jl")
-include("make_gates.jl")
+include("utilities/utilities.jl")
+include("utilities/initial_state.jl")
+include("utilities/make_random_gates.jl")
 
 function apply_gate(g, psi; cutoff, maxdim)
   j = findsite(psi,inds(g))  # the gate acts on sites j and j+1
@@ -32,6 +33,13 @@ function tebd_gate_evolution(gates, psi; cutoff=default_cutoff(), maxdim=default
   return psi
 end
 
+"""
+Keyword arguments:
+* n - number of qubits
+* cutoff - total "weight" of density matrix eigenvalues to truncate on each bond
+* maxdim - maximum allowed bond dimension of tensor network after each step
+* seed - random seed for making reproducible random gates
+"""
 function main(; n=40, cutoff=default_cutoff(), maxdim=default_maxdim(), seed=1, sites=nothing)
   Random.seed!(seed)
 
@@ -43,7 +51,7 @@ function main(; n=40, cutoff=default_cutoff(), maxdim=default_maxdim(), seed=1, 
 
   psi = initial_state(sites)
 
-  gates = make_gates(sites)
+  gates = make_random_gates(sites)
 
   psi = tebd_gate_evolution(gates, psi; cutoff, maxdim)
 
