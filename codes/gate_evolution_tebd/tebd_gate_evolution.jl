@@ -1,6 +1,7 @@
 using ITensors
 using ITensorMPS
 using Random
+using Printf
 
 include("utilities/utilities.jl")
 include("utilities/initial_state.jl")
@@ -48,11 +49,14 @@ Keyword arguments:
 * maxdim - maximum allowed bond dimension of tensor network after each step
 * seed - random seed for making reproducible random gates
 """
-function main(; n=40, cutoff=default_cutoff(), maxdim=default_maxdim(), seed=1)
+function run_tebd(; n=40, cutoff=default_cutoff(), maxdim=default_maxdim(), seed=1)
   Random.seed!(seed)
   sites = qubit_sites(n)
-  psi = initial_state(sites)
+  psi0 = initial_state(sites)
   gates = make_random_gates(sites)
-  psi = tebd_gate_evolution(gates, psi; cutoff, maxdim)
-  return psi
+  psi = tebd_gate_evolution(gates, psi0; cutoff, maxdim)
+
+  @printf("Norm of final state = %.14f\n",inner(psi,psi))
+  @printf("Overlap with initial state = %.14f\n",inner(psi0,psi))
+  return
 end
