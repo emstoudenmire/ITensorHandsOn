@@ -2,8 +2,15 @@ using ITensors, ITensorMPS
 
 include("../tebd_gate_evolution.jl")
 
+#
+# Based on sampling algorithm described at
+# https://tensornetwork.org/mps/algorithms/sampling/
+#
+
 function compute_sample(psi::MPS)
-  psi = orthogonalize(psi,1)
+  psi = orthogonalize(psi,1)  # makes right-hand-side MPS tensors
+                              # orthogonal to themselves, so they
+                              # cancel out in calculation of rho below
   n = length(psi)
 
   sample = zeros(Int,n)
@@ -25,7 +32,7 @@ function compute_sample(psi::MPS)
     #   of the reduced density matrix
     # - taking the random value `r` computed for you
     #   above
-    # - work out the correct sampled_value (∈ [0,d])
+    # - work out the correct sampled_value (∈ 1,2,...,d)
     #   to save into the `sample` array below
     #
     # Correct means such that the user gets a random
