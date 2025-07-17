@@ -27,21 +27,19 @@ function tebd_gate_evolution(gates, psi; cutoff=default_cutoff(), maxdim=default
     #
     # Tips:
     # - You can obtain the j and j+1 MPS tensors like `psi[j]` and `psi[j+1]`.
-    # - The `uniqueinds` and `commoninds` functions can be helpful to obtain collections of
+    # - The `uniqueinds` function can be helpful to obtain collections of
     #   indices to pass to the `svd` function.
     # - Pass cutoff and maxdim to `svd` to control the resulting "bond dimension"
     # - Don't forget to normalize the wavefunction! You can use norm(T) to 
     #   get the norm (sqrt of sum of squared elements) of an ITensor.
     #
 
+    # your code goes here...
+
   end
   return psi
 end
 
-#function tebd_gate_evolution(gates, psi; cutoff=default_cutoff(), maxdim=default_maxdim(), seed=1)
-#    psi = apply_gate(g, psi; cutoff, maxdim)
-#  return psi
-#end
 
 """
 Keyword arguments:
